@@ -1,0 +1,14 @@
+{
+  "name": "fintech-tenant-buckets",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "demo": "tsx src/tenant_receipts.ts",
+    "test": "tsx --test src/tenant_receipts.test.ts"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}
