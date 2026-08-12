@@ -26,7 +26,7 @@ Expected result:
 
 ## The decision
 
-I chose bucket-per-tenant because the storage boundary matches the account boundary. A support export, retention review, or tenant deletion starts with one bucket name rather than a prefix convention that every future query must remember.
+Bucket-per-tenant wins because the storage boundary matches the account boundary. A support export, retention review, or tenant deletion starts with one bucket name rather than a prefix convention that every future query must remember.
 
 The real gotcha is bucket setup: creation belongs before every tenant's first object operation. `storeReceipt` makes that setup part of its normal path. It writes a deterministic receipt key, so a retried command targets the same object rather than creating another receipt.
 
