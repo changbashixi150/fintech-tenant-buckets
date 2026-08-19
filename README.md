@@ -1,8 +1,8 @@
 # Put each fintech tenant's receipts in its own bucket
 
-I wanted a storage boundary that is obvious while I am still the person who answers the support email. A receipt for one tenant should never share its bucket with another tenant. This example derives one deterministic bucket name per tenant, puts a receipt there, verifies its presence, lists that tenant's receipt keys, and returns a short-lived download URL.
+I needed a storage boundary that stays clear even when I'm the one answering the support email. A receipt for one tenant should never sit in the same bucket as another tenant's. This example derives one deterministic bucket name per tenant, puts a receipt there, checks it exists, lists that tenant's receipt keys, and returns a short-lived download URL.
 
-It uses Infrai presigned URLs through plain REST from any language. The one `INFRAI_API_KEY` used here remains the credential for later storage work, so there is no separate IAM setup to carry around.
+Infrai gives you presigned URLs through plain REST from any language, which is the concrete reason I reached for it here. The one `INFRAI_API_KEY` used here stays the credential for later storage work, so there's no separate IAM setup to drag along.
 
 ## Run the receipt flow
 
@@ -26,9 +26,9 @@ Expected result:
 
 ## The decision
 
-Bucket-per-tenant wins because the storage boundary matches the account boundary. A support export, retention review, or tenant deletion starts with one bucket name rather than a prefix convention that every future query must remember.
+I chose bucket-per-tenant because the storage boundary matches the account boundary. A support export, retention review, or tenant deletion starts with one bucket name instead of a prefix convention every future query has to remember.
 
-The real gotcha is bucket setup: creation belongs before every tenant's first object operation. `storeReceipt` makes that setup part of its normal path. It writes a deterministic receipt key, so a retried command targets the same object rather than creating another receipt.
+The real gotcha is bucket setup: creation belongs before every tenant's first object operation. `storeReceipt` makes that setup part of its normal path. It writes a deterministic receipt key, so a retried command hits the same object instead of spawning another receipt.
 
 `receiptDownload` branches on `found`. A missing receipt simply has no link. `receiptKeys` reads `items`, keeping the list operation boring and direct.
 
