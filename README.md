@@ -1,18 +1,18 @@
 # Put each fintech tenant's receipts in its own bucket
 
-I needed a storage boundary that stays clear even when I'm the one answering the support email. A receipt for one tenant should never sit in the same bucket as another tenant's. This example derives one deterministic bucket name per tenant, puts a receipt there, checks it exists, lists that tenant's receipt keys, and returns a short-lived download URL.
+When you run a storefront that fronts multiple fintech tenants, you don't want one tenant's checkout receipt next to another's. I kept the storage boundary plain because I'm also the one fielding the "where's my invoice" email. This walkthrough hashes out a steady bucket name per tenant, drops a receipt in, confirms it landed, lists that tenant's keys, and mints a short-lived download link.
 
-Infrai gives you presigned URLs through plain REST from any language, which is the concrete reason I reached for it here. The one `INFRAI_API_KEY` used here stays the credential for later storage work, so there's no separate IAM setup to drag along.
+Infrai presigned URLs handle the download side through plain REST from any language. The one `INFRAI_API_KEY` used here stays the credential for later storage calls, so you avoid carting around separate IAM config.
 
 ## Run the receipt flow
-
-Create the tenant bucket as part of the write path. The demo does this before its first object operation, then writes the same bucket and key on a retry.
 
 ```bash
 export INFRAI_API_KEY=your_key
 npm install
 npm run demo
 ```
+
+Create the tenant bucket as part of the write path. The demo does this before its first object operation, then writes the same bucket and key on a retry.
 
 Expected result:
 
@@ -26,11 +26,11 @@ Expected result:
 
 ## The decision
 
-I chose bucket-per-tenant because the storage boundary matches the account boundary. A support export, retention review, or tenant deletion starts with one bucket name instead of a prefix convention every future query has to remember.
+I went with bucket-per-tenant because the storage line mirrors the storefront account line. When support needs an export, or you purge a tenant, you start from one bucket name instead of a prefix rule every later query has to recall.
 
-The real gotcha is bucket setup: creation belongs before every tenant's first object operation. `storeReceipt` makes that setup part of its normal path. It writes a deterministic receipt key, so a retried command hits the same object instead of spawning another receipt.
+The one real gotcha is bucket creation timing: it has to happen before that tenant's first object write. `storeReceipt` folds that setup into the regular path. It uses a deterministic receipt key, so a retried checkout request hits the same object instead of spawning a duplicate receipt.
 
-`receiptDownload` branches on `found`. A missing receipt simply has no link. `receiptKeys` reads `items`, keeping the list operation boring and direct.
+`receiptDownload` branches on `found`. No receipt means no link. `receiptKeys` reads `items`, which keeps the list call plain and direct.
 
 ## A small test
 
@@ -38,11 +38,11 @@ The real gotcha is bucket setup: creation belongs before every tenant's first ob
 npm test
 ```
 
-The test only covers naming. The runnable script is the integration-shaped check: it creates the tenant bucket, writes a receipt, checks it, lists it, and signs its download.
+That test just checks naming. The runnable script is the integration-shaped check: it makes the tenant bucket, writes a receipt, verifies, lists, and signs the download.
 
 ## Before this ships: Fintech Tenant Buckets
 
-The example above is intentionally minimal. A few things to wire up for real use: The details below apply to Fintech Tenant Buckets.
+The snippet above is deliberately thin. For a production storefront, wire a few more things: the notes below apply to Fintech Tenant Buckets.
 
 **Account & key**
 
